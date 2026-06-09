@@ -1,0 +1,195 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ─── SVG Line animation ─────────────────────────────────────────────────── */
+@keyframes drawLine {
+  from { stroke-dashoffset: 200; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Variables ──────────────────────────────────────────────────────── */
+:root {
+  --bg-primary: #0a0f1e;
+  --bg-secondary: #0f172a;
+  --bg-card: rgba(30, 41, 59, 0.6);
+  --border-glass: rgba(139, 92, 246, 0.2);
+  --glow-violet: rgba(139, 92, 246, 0.5);
+  --glow-cyan: rgba(34, 211, 238, 0.5);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8b5cf6;
+}
+
+/* ─── Glassmorphism ──────────────────────────────────────────────────────── */
+@layer components {
+  .glass {
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+  }
+
+  .glass-light {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .btn-primary {
+    @apply bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white font-semibold px-6 py-3 rounded-xl
+           transition-all duration-200 hover:scale-105 active:scale-95
+           shadow-lg shadow-violet-900/40;
+  }
+
+  .btn-secondary {
+    @apply glass text-slate-200 font-semibold px-6 py-3 rounded-xl
+           transition-all duration-200 hover:scale-105 active:scale-95
+           hover:border-violet-400/40;
+  }
+
+  .btn-danger {
+    @apply bg-rose-600/80 hover:bg-rose-500 text-white font-semibold px-6 py-3 rounded-xl
+           transition-all duration-200 hover:scale-105 active:scale-95;
+  }
+
+  .input-field {
+    @apply glass text-slate-100 placeholder-slate-500 w-full px-4 py-3 rounded-xl
+           focus:outline-none focus:border-violet-400/60 focus:ring-2 focus:ring-violet-500/20
+           transition-all duration-200;
+  }
+
+  .card {
+    @apply glass rounded-2xl p-6;
+  }
+
+  /* Bingo cell states */
+  .bingo-cell {
+    @apply relative flex items-center justify-center rounded-xl font-bold text-lg
+           cursor-pointer select-none transition-all duration-200
+           border border-slate-700/50 hover:border-violet-400/50
+           hover:shadow-lg hover:shadow-violet-900/20 hover:-translate-y-0.5
+           active:scale-95;
+    aspect-ratio: 1;
+    min-width: 52px;
+    min-height: 52px;
+  }
+
+  .bingo-cell-default {
+    @apply bg-navy-800/80 text-slate-300 hover:bg-navy-700/80 hover:text-white;
+  }
+
+  .bingo-cell-marked {
+    @apply bg-violet-700/90 text-white border-violet-500 shadow-lg shadow-violet-900/50
+           animate-mark-cell;
+  }
+
+  .bingo-cell-completed {
+    @apply bg-gradient-to-br from-neon-green/30 to-violet-600/50
+           border-cyan-400/70 text-cyan-200 shadow-lg shadow-cyan-900/40;
+  }
+
+  /* BINGO letter */
+  .bingo-letter {
+    @apply font-black text-2xl tracking-wider transition-all duration-500;
+  }
+
+  .bingo-letter-active {
+    @apply text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-amber-500
+           drop-shadow-[0_0_12px_rgba(251,191,36,0.8)];
+  }
+
+  .bingo-letter-done {
+    @apply text-slate-600;
+  }
+
+  /* Shimmer loading */
+  .shimmer {
+    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
+
+  /* Gradient background blob */
+  .bg-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.15;
+    pointer-events: none;
+  }
+}
+
+/* ─── Animated background ────────────────────────────────────────────────── */
+.bg-animated {
+  background: radial-gradient(ellipse at 20% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 80%, rgba(34, 211, 238, 0.1) 0%, transparent 60%),
+              linear-gradient(135deg, #0a0f1e 0%, #0f172a 100%);
+}
+
+/* ─── Grid glow effect ───────────────────────────────────────────────────── */
+.board-glow {
+  box-shadow: 0 0 60px rgba(139, 92, 246, 0.1),
+              inset 0 0 30px rgba(139, 92, 246, 0.05);
+}
+
+/* ─── Win celebration ────────────────────────────────────────────────────── */
+@keyframes victory-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+.victory-card {
+  animation: victory-pulse 1.5s ease-in-out infinite;
+}
+
+/* ─── Chat bubble ────────────────────────────────────────────────────────── */
+.chat-bubble-mine {
+  @apply bg-violet-600/70 text-white ml-auto;
+}
+.chat-bubble-other {
+  @apply bg-slate-700/70 text-slate-100 mr-auto;
+}
+
+/* ─── Tooltip ────────────────────────────────────────────────────────────── */
+.tooltip {
+  @apply absolute -top-9 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs
+         px-2 py-1 rounded-lg whitespace-nowrap pointer-events-none opacity-0
+         group-hover:opacity-100 transition-opacity duration-200 z-50
+         border border-slate-600;
+}
