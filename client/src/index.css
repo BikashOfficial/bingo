@@ -152,6 +152,7 @@ body {
     filter: blur(80px);
     opacity: 0.15;
     pointer-events: none;
+    will-change: transform;
   }
 }
 
@@ -176,6 +177,7 @@ body {
 
 .victory-card {
   animation: victory-pulse 1.5s ease-in-out infinite;
+  will-change: transform;
 }
 
 /* ─── Chat bubble ────────────────────────────────────────────────────────── */

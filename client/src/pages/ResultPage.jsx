@@ -29,6 +29,9 @@ export default function ResultPage() {
   };
 
   const handleLeave = () => {
+    if (socket) {
+      socket.emit('leave_room', { roomCode });
+    }
     dispatch({ type: 'LEAVE_ROOM' });
     navigate('/');
   };

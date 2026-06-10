@@ -62,16 +62,14 @@ function registerGameHandlers(io, socket) {
         return;
       }
 
-      if (room.gameState === 'finished') {
-        socket.emit('room_error', { type: 'finished', message: 'This game has already ended.' });
-        return;
-      }
-
       // Check if same player is rejoining (reconnect)
       const existingIdx = room.players.findIndex((p) => p.playerName === playerName);
-      if (existingIdx !== -1 && room.players[existingIdx].socketId !== socket.id) {
-        room.players[existingIdx].socketId = socket.id;
-        socket.join(code);
+      if (existingIdx !== -1) {
+        if (room.players[existingIdx].socketId !== socket.id) {
+          room.players[existingIdx].socketId = socket.id;
+          socket.join(code);
+          io.to(code).emit('player_reconnected', { playerName });
+        }
         socket.emit('room_rejoined', {
           roomCode: code,
           player: room.players[existingIdx],
@@ -80,7 +78,11 @@ function registerGameHandlers(io, socket) {
           gameState: room.gameState,
           currentTurn: room.currentTurn,
         });
-        io.to(code).emit('player_reconnected', { playerName });
+        return;
+      }
+
+      if (room.gameState === 'finished') {
+        socket.emit('room_error', { type: 'finished', message: 'This game has already ended.' });
         return;
       }
 
@@ -253,7 +255,8 @@ function registerGameHandlers(io, socket) {
   // ─── PLAY AGAIN ─────────────────────────────────────────────────────────────
   socket.on('play_again', ({ roomCode }) => {
     try {
-      const room = RoomStore.get(roomCode);
+      const code = (roomCode || '').toUpperCase().trim();
+      const room = RoomStore.get(code);
       if (!room) return;
 
       const player = room.players.find((p) => p.socketId === socket.id);
@@ -278,9 +281,9 @@ function registerGameHandlers(io, socket) {
           p.readyForRematch = false;
         }
 
-        RoomStore.set(roomCode, room);
+        RoomStore.set(code, room);
 
-        io.to(roomCode).emit('game_reset', {
+        io.to(code).emit('game_reset', {
           players: room.players.map((p) => ({ socketId: p.socketId, playerName: p.playerName, score: p.score })),
           currentTurn: room.currentTurn,
         });
@@ -293,10 +296,35 @@ function registerGameHandlers(io, socket) {
           });
         }
       } else {
-        socket.to(roomCode).emit('player_wants_rematch', { playerName: player.playerName });
+        socket.to(code).emit('player_wants_rematch', { playerName: player.playerName });
       }
     } catch (err) {
       console.error('[play_again error]', err);
+    }
+  });
+
+  // ─── LEAVE ROOM ──────────────────────────────────────────────────────────────
+  socket.on('leave_room', ({ roomCode }) => {
+    try {
+      const code = (roomCode || '').toUpperCase().trim();
+      const room = RoomStore.get(code);
+      if (!room) return;
+
+      const player = room.players.find((p) => p.socketId === socket.id);
+      if (!player) return;
+
+      console.log(`[Leave Room] ${player.playerName} left room ${code}`);
+
+      // Notify the opponent that the room is closed because someone left
+      socket.to(code).emit('room_closed', {
+        message: `${player.playerName} left. Room has been closed.`,
+      });
+
+      // Delete the room and leave room channel
+      RoomStore.delete(code);
+      socket.leave(code);
+    } catch (err) {
+      console.error('[leave_room error]', err);
     }
   });
 

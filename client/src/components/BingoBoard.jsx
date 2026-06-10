@@ -116,7 +116,7 @@ export default function BingoBoard({ board, markedCells, completedLines = [], is
                 marked={markedCells?.[r]?.[c] || false}
                 completed={isCellInCompletedLine(r, c)}
                 isMyTurn={isMyTurn}
-                onClick={() => onCellClick?.(num)}
+                onClick={onCellClick}
               />
             ))
           )}

@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 /**
  * BingoCell — A single cell in the Bingo board.
  * @param {number}   value      - The number displayed
@@ -6,16 +8,24 @@
  * @param {boolean}  isMyTurn   - Whether it is currently this player's turn
  * @param {function} onClick    - Click handler
  */
-export default function BingoCell({ value, marked, completed, isMyTurn, onClick }) {
+function BingoCell({ value, marked, completed, isMyTurn, onClick }) {
   const handleClick = () => {
-    if (!marked && isMyTurn) onClick?.();
+    if (!marked && isMyTurn) onClick?.(value);
   };
 
   return (
     <div
       onClick={handleClick}
       title={marked ? `${value} — marked` : isMyTurn ? `Click to mark ${value}` : 'Wait for your turn'}
-      style={{ touchAction: 'manipulation', aspectRatio: '1' }}
+      style={{
+        touchAction: 'manipulation',
+        aspectRatio: '1',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        msUserSelect: 'none',
+        MozUserSelect: 'none',
+        WebkitTouchCallout: 'none'
+      }}
       className={[
         // Base
         'relative flex flex-col items-center justify-center rounded-xl',
@@ -38,18 +48,20 @@ export default function BingoCell({ value, marked, completed, isMyTurn, onClick 
       {marked ? (
         <>
           {/* Number in small text above X */}
-          <span className="text-[10px] font-semibold opacity-60 leading-none">{value}</span>
+          <span className="text-[10px] font-semibold opacity-60 leading-none select-none" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>{value}</span>
           {/* Red X */}
           <span
-            className="text-base font-black leading-none"
-            style={{ textShadow: '0 0 10px rgba(255,100,100,0.9)' }}
+            className="text-base font-black leading-none select-none"
+            style={{ textShadow: '0 0 10px rgba(255,100,100,0.9)', userSelect: 'none', WebkitUserSelect: 'none' }}
           >
             ✕
           </span>
         </>
       ) : (
-        <span className="text-sm sm:text-base font-bold">{value}</span>
+        <span className="text-sm sm:text-base font-bold select-none" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>{value}</span>
       )}
     </div>
   );
 }
+
+export default memo(BingoCell);

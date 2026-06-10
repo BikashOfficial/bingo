@@ -11,13 +11,35 @@ import { useGame } from '../context/GameContext';
  */
 export function useSocketHandlers() {
   const { socket } = useSocket();
-  const { dispatch } = useGame();
+  const { state, dispatch } = useGame();
+  const { roomCode, playerName, gameState, mySocketId } = state;
   const navigate = useNavigate();
   const registeredRef = useRef(false);
 
   useEffect(() => {
     if (!socket || registeredRef.current) return;
     registeredRef.current = true;
+
+    // ── Auto-Rejoin check ──
+    const handleConnect = () => {
+      console.log('[SocketHandlers] Connected/Reconnected:', socket.id);
+      if (roomCode && playerName && gameState !== 'home') {
+        if (mySocketId && mySocketId !== socket.id) {
+          console.log(`[SocketHandlers] Socket ID mismatch (local: ${socket.id}, state: ${mySocketId}). Auto-rejoining...`);
+          socket.emit('join_room', { roomCode, playerName });
+        }
+      }
+    };
+
+    socket.on('connect', handleConnect);
+
+    // Check immediately if we are already connected but need to rejoin
+    if (socket.connected && roomCode && playerName && gameState !== 'home') {
+      if (mySocketId && mySocketId !== socket.id) {
+        console.log(`[SocketHandlers] Auto-rejoining room (on load/state change): ${roomCode} as ${playerName}`);
+        socket.emit('join_room', { roomCode, playerName });
+      }
+    }
 
     // ── Room Created ──────────────────────────────────────────────────────────
     socket.on('room_created', (data) => {
@@ -34,7 +56,11 @@ export function useSocketHandlers() {
     // ── Room Rejoined (reconnect) ─────────────────────────────────────────────
     socket.on('room_rejoined', (data) => {
       dispatch({ type: 'ROOM_REJOINED', payload: data });
-      navigate('/game');
+      if (data.gameState === 'finished') {
+        navigate('/result');
+      } else {
+        navigate('/game');
+      }
       toast.success('Reconnected to game!');
     });
 
@@ -129,6 +155,7 @@ export function useSocketHandlers() {
 
     return () => {
       registeredRef.current = false;
+      socket.off('connect', handleConnect);
       const events = [
         'room_created', 'room_joined', 'room_rejoined', 'room_error',
         'game_started', 'your_board', 'board_updated', 'number_marked',
@@ -138,5 +165,5 @@ export function useSocketHandlers() {
       ];
       events.forEach((e) => socket.off(e));
     };
-  }, [socket, dispatch, navigate]);
+  }, [socket, dispatch, navigate, roomCode, playerName, gameState, mySocketId]);
 }

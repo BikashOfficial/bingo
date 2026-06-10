@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useGame } from '../context/GameContext';
@@ -33,7 +33,7 @@ export default function GamePage() {
     return null;
   }
 
-  const handleCellClick = (number) => {
+  const handleCellClick = useCallback((number) => {
     if (!socket || gameState !== 'playing') return;
     if (!isMyTurn) {
       toast("It's not your turn!", {
@@ -48,9 +48,12 @@ export default function GamePage() {
       return;
     }
     socket.emit('mark_number', { roomCode, number });
-  };
+  }, [socket, gameState, isMyTurn, markedNumbers, roomCode]);
 
   const handleLeave = () => {
+    if (socket) {
+      socket.emit('leave_room', { roomCode });
+    }
     dispatch({ type: 'LEAVE_ROOM' });
     navigate('/');
   };
