@@ -9,7 +9,7 @@ export default function BingoProgress({ bingoLetters = [], completedCount = 0 })
 
   return (
     <div className="card text-center">
-      <p className="text-xs text-slate-500 uppercase tracking-widest mb-3 font-semibold">Progress</p>
+      {/* <p className="text-xs text-slate-500 uppercase tracking-widest mb-3 font-semibold">Progress</p> */}
 
       <div className="flex items-center justify-center gap-2 sm:gap-3">
         {letters.map((letter, i) => {
@@ -38,13 +38,6 @@ export default function BingoProgress({ bingoLetters = [], completedCount = 0 })
         })}
       </div>
 
-      {/* Progress bar */}
-      <div className="mt-3 h-1.5 rounded-full bg-slate-700/50 overflow-hidden">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 transition-all duration-700"
-          style={{ width: `${(completedCount / 5) * 100}%` }}
-        />
-      </div>
 
       <p className="text-xs text-slate-500 mt-1.5">
         {completedCount}/5 lines{completedCount === 5 ? ' — BINGO! 🎉' : ''}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useGame } from '../context/GameContext';
@@ -33,9 +33,21 @@ export default function GamePage() {
     return null;
   }
 
+  const stateRef = useRef(state);
+  const socketRef = useRef(socket);
+
+  useEffect(() => {
+    stateRef.current = state;
+    socketRef.current = socket;
+  }, [state, socket]);
+
   const handleCellClick = useCallback((number) => {
-    if (!socket || gameState !== 'playing') return;
-    if (!isMyTurn) {
+    const currentState = stateRef.current;
+    const currentSocket = socketRef.current;
+    
+    if (!currentSocket || currentState.gameState !== 'playing') return;
+    
+    if (!currentState.isMyTurn) {
       toast("It's not your turn!", {
         icon: '🚫',
         style: { background: '#1e293b', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)' },
@@ -43,12 +55,14 @@ export default function GamePage() {
       });
       return;
     }
-    if (markedNumbers.includes(number)) {
+    
+    if (currentState.markedNumbers.includes(number)) {
       toast('Already marked!', { icon: '⚠️', duration: 1200 });
       return;
     }
-    socket.emit('mark_number', { roomCode, number });
-  }, [socket, gameState, isMyTurn, markedNumbers, roomCode]);
+    
+    currentSocket.emit('mark_number', { roomCode: currentState.roomCode, number });
+  }, []);
 
   const handleLeave = () => {
     if (socket) {

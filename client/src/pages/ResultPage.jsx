@@ -10,15 +10,15 @@ export default function ResultPage() {
   const navigate = useNavigate();
   const [requestedRematch, setRequestedRematch] = useState(false);
 
-  const { winner, isWinner, playerName, opponentName, myScore, opponentScoreSession, totalGames, roomCode } = state;
+  const { winner, isWinner, playerName, opponentName, myScore, opponentScoreSession, totalGames, roomCode, gameState } = state;
 
   useEffect(() => {
-    if (!winner) {
+    if (!winner && gameState !== 'playing') {
       navigate('/');
     }
-  }, [winner, navigate]);
+  }, [winner, gameState, navigate]);
 
-  if (!winner) {
+  if (!winner && gameState !== 'playing') {
     return null;
   }
 

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, memo } from 'react';
 import BingoCell from './BingoCell';
 
 /**
@@ -49,7 +49,7 @@ function getLineCoords(lineIdx) {
  * @param {function}    onCellClick     — (number) => void
  * @param {string}      label           — board label
  */
-export default function BingoBoard({ board, markedCells, completedLines = [], isMyTurn, onCellClick, label }) {
+function BingoBoard({ board, markedCells, completedLines = [], isMyTurn, onCellClick, label }) {
   const boardRef = useRef(null);
 
   // Loading skeleton
@@ -183,3 +183,5 @@ export default function BingoBoard({ board, markedCells, completedLines = [], is
     </div>
   );
 }
+
+export default memo(BingoBoard);

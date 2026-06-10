@@ -48,17 +48,17 @@ function BingoCell({ value, marked, completed, isMyTurn, onClick }) {
       {marked ? (
         <>
           {/* Number in small text above X */}
-          <span className="text-[10px] font-semibold opacity-60 leading-none select-none" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>{value}</span>
+          <span className="text-[10px] font-semibold opacity-60 leading-none select-none pointer-events-none" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>{value}</span>
           {/* Red X */}
           <span
-            className="text-base font-black leading-none select-none"
+            className="text-base font-black leading-none select-none pointer-events-none"
             style={{ textShadow: '0 0 10px rgba(255,100,100,0.9)', userSelect: 'none', WebkitUserSelect: 'none' }}
           >
             ✕
           </span>
         </>
       ) : (
-        <span className="text-sm sm:text-base font-bold select-none" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>{value}</span>
+        <span className="text-sm sm:text-base font-bold select-none pointer-events-none" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>{value}</span>
       )}
     </div>
   );
