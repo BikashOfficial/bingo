@@ -33,16 +33,12 @@ export default function ChatRoomPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only on initial mount
 
-  // Leave room and reset chat state when navigating away from the chat room route
+  // Clean up typing timer on unmount
   useEffect(() => {
     return () => {
-      const isStillOnChatRoomRoute = window.location.pathname.startsWith(`/chat/room/${roomCode}`);
-      if (!isStillOnChatRoomRoute) {
-        leaveRoom(roomCode);
-        dispatch({ type: 'LEAVE' });
-      }
+      clearTimeout(typingTimer.current);
     };
-  }, [roomCode, leaveRoom, dispatch]);
+  }, []);
 
   // Handle mobile virtual keyboard and scrolling adjustments
   useEffect(() => {
@@ -50,6 +46,7 @@ export default function ChatRoomPage() {
       const chatRoot = document.querySelector('.chat-root');
       if (chatRoot && window.visualViewport) {
         chatRoot.style.height = `${window.visualViewport.height}px`;
+        chatRoot.style.top = `${window.visualViewport.offsetTop}px`;
       }
       // Keep scroll anchored to bottom when layout changes
       setTimeout(() => {
@@ -65,6 +62,7 @@ export default function ChatRoomPage() {
 
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleResize);
+      window.visualViewport.addEventListener('scroll', handleResize);
       handleResize();
     }
     window.addEventListener('scroll', handleScroll);
@@ -72,6 +70,7 @@ export default function ChatRoomPage() {
     return () => {
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleResize);
+        window.visualViewport.removeEventListener('scroll', handleResize);
       }
       window.removeEventListener('scroll', handleScroll);
     };
@@ -182,6 +181,7 @@ export default function ChatRoomPage() {
 
   const handleLeave = () => {
     leaveRoom(roomCode);
+    dispatch({ type: 'LEAVE' });
     navigate('/', { replace: true });
   };
 

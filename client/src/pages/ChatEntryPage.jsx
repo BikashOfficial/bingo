@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
 import { useChat } from '../context/ChatContext';
@@ -17,9 +17,11 @@ export default function ChatEntryPage() {
   const [loading, setLoading] = useState(false);
 
   // Navigate to chat room once we have a room code from context
-  if (state.roomCode) {
-    navigate(`/chat/room/${state.roomCode}`, { replace: true });
-  }
+  useEffect(() => {
+    if (state.roomCode) {
+      navigate(`/chat/room/${state.roomCode}`, { replace: true });
+    }
+  }, [state.roomCode, navigate]);
 
   const handleCreate = () => {
     if (!displayName.trim()) { toast.error('Enter your display name!'); return; }
