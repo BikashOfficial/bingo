@@ -11,7 +11,7 @@ import { toast } from 'react-hot-toast';
 export default function ChatRoomPage() {
   const { roomCode } = useParams();
   const navigate = useNavigate();
-  const { state } = useChat();
+  const { state, dispatch } = useChat();
   const { sendMessage, sendGif, sendImage, editMessage, unsendMessage, reactToMessage, sendTyping, leaveRoom } = useChatActions();
 
   const [text, setText] = useState('');
@@ -19,19 +19,63 @@ export default function ChatRoomPage() {
   const [showPicker, setShowPicker] = useState(false);
   const [showUserList, setShowUserList] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
 
   const messagesEndRef = useRef(null);
   const typingTimer = useRef(null);
   const isTypingRef = useRef(false);
   const inputRef = useRef(null);
 
-  // Redirect if not in a room (passing roomCode in state to auto-join)
+  // Redirect if not in a room on initial mount (e.g. direct link or refresh)
   useEffect(() => {
     if (!state.roomCode) {
-      navigate('/chat', { replace: true, state: { autoJoinCode: roomCode } });
+      navigate('/chat', { replace: true });
     }
-  }, [state.roomCode, roomCode, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only on initial mount
+
+  // Leave room and reset chat state when navigating away from the chat room route
+  useEffect(() => {
+    return () => {
+      const isStillOnChatRoomRoute = window.location.pathname.startsWith(`/chat/room/${roomCode}`);
+      if (!isStillOnChatRoomRoute) {
+        leaveRoom(roomCode);
+        dispatch({ type: 'LEAVE' });
+      }
+    };
+  }, [roomCode, leaveRoom, dispatch]);
+
+  // Handle mobile virtual keyboard and scrolling adjustments
+  useEffect(() => {
+    const handleResize = () => {
+      const chatRoot = document.querySelector('.chat-root');
+      if (chatRoot && window.visualViewport) {
+        chatRoot.style.height = `${window.visualViewport.height}px`;
+      }
+      // Keep scroll anchored to bottom when layout changes
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    };
+
+    const handleScroll = () => {
+      if (window.scrollY !== 0) {
+        window.scrollTo(0, 0);
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      handleResize();
+    }
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+      }
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -74,6 +118,12 @@ export default function ChatRoomPage() {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleFocus = () => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 150);
   };
 
   const handlePaste = (e) => {
@@ -125,16 +175,6 @@ export default function ChatRoomPage() {
     });
   };
 
-  // ── Copy direct invite link ──────────────────────────────────────────────────
-  const copyInviteLink = () => {
-    const inviteLink = `${window.location.origin}/chat/room/${roomCode}`;
-    navigator.clipboard.writeText(inviteLink).then(() => {
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2000);
-      toast.success('Direct invite link copied!');
-    });
-  };
-
   // ── Navigation / Leave handlers ──────────────────────────────────────────────
   const handleBack = () => {
     navigate('/', { replace: true });
@@ -178,16 +218,7 @@ export default function ChatRoomPage() {
             <span className="room-code-icon">{copied ? '✓' : '⎘'}</span>
           </button>
 
-          {/* Share Link button */}
-          <button onClick={copyInviteLink} className="chat-icon-btn" title="Copy direct invite link">
-            {copiedLink ? (
-              <span style={{ fontSize: '1rem', color: '#10b981', fontWeight: 'bold' }}>✓</span>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98M21 5a3 3 0 11-6 0 3 3 0 016 0zm-12 7a3 3 0 11-6 0 3 3 0 016 0zm12 7a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            )}
-          </button>
+
 
           {/* Members button */}
           <button onClick={() => setShowUserList(true)} className="chat-icon-btn" title="Members">
@@ -212,14 +243,11 @@ export default function ChatRoomPage() {
             <span className="chat-empty-icon">👋</span>
             <p className="chat-empty-title">Room is ready!</p>
             <p className="chat-empty-sub" style={{ marginBottom: '1.25rem' }}>
-              Invite friends to join this private room using the options below:
+              Invite friends to join this private room using the code below:
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', maxWidth: '240px' }}>
-              <button onClick={copyCode} className="btn-secondary" style={{ padding: '0.625rem 1rem', fontSize: '0.875rem', borderRadius: '12px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              <button onClick={copyCode} className="btn-primary" style={{ padding: '0.625rem 1rem', fontSize: '0.875rem', borderRadius: '12px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                 <span>{copied ? '✓' : '⎘'}</span> {copied ? 'Room Code Copied!' : 'Copy Room Code'}
-              </button>
-              <button onClick={copyInviteLink} className="btn-primary" style={{ padding: '0.625rem 1rem', fontSize: '0.875rem', borderRadius: '12px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: 'none' }}>
-                <span>{copiedLink ? '✓' : '🔗'}</span> {copiedLink ? 'Invite Link Copied!' : 'Copy Invite Link'}
               </button>
             </div>
           </div>
@@ -291,6 +319,7 @@ export default function ChatRoomPage() {
             onChange={handleTextChange}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
+            onFocus={handleFocus}
             rows={1}
             maxLength={1000}
           />

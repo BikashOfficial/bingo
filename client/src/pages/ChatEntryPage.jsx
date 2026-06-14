@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
 import { useChat } from '../context/ChatContext';
 import { useChatActions } from '../sockets/chatHandlers';
@@ -7,27 +7,14 @@ import { toast } from 'react-hot-toast';
 
 export default function ChatEntryPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { connected } = useSocket();
   const { state } = useChat();
   const { createRoom, joinRoom } = useChatActions();
   const [displayName, setDisplayName] = useState('');
   
-  // Read code from state or search query param
-  const searchParams = new URLSearchParams(location.search);
-  const codeFromUrl = searchParams.get('code') || location.state?.autoJoinCode || '';
-
-  const [roomCode, setRoomCode] = useState(codeFromUrl.toUpperCase().slice(0, 6));
-  const [tab, setTab] = useState(codeFromUrl ? 'join' : 'create');
+  const [roomCode, setRoomCode] = useState('');
+  const [tab, setTab] = useState('create');
   const [loading, setLoading] = useState(false);
-
-  // Update if code from url/state changes
-  useEffect(() => {
-    if (codeFromUrl) {
-      setRoomCode(codeFromUrl.toUpperCase().slice(0, 6));
-      setTab('join');
-    }
-  }, [codeFromUrl]);
 
   // Navigate to chat room once we have a room code from context
   if (state.roomCode) {
@@ -127,20 +114,7 @@ export default function ChatEntryPage() {
 
           {tab === 'join' && (
             <div className="tab-content">
-              {codeFromUrl && (
-                <div style={{
-                  background: 'rgba(139, 92, 246, 0.08)',
-                  border: '1px solid rgba(139, 92, 246, 0.2)',
-                  borderRadius: '12px',
-                  padding: '0.75rem',
-                  fontSize: '0.8125rem',
-                  color: '#cbd5e1',
-                  textAlign: 'center',
-                  marginBottom: '0.25rem',
-                }}>
-                  You've been invited to join room <strong style={{ color: '#a78bfa' }}>{roomCode}</strong>. Enter your display name above to enter the chat!
-                </div>
-              )}
+
               <div className="field-group">
                 <label className="field-label">Room Code</label>
                 <input
