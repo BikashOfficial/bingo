@@ -141,7 +141,7 @@ function registerChatHandlers(io, socket) {
   });
 
   // ─── SEND MESSAGE ────────────────────────────────────────────────────────────
-  socket.on('chat_send_message', ({ roomCode, text, replyTo, type = 'text', gifUrl }) => {
+  socket.on('chat_send_message', ({ roomCode, text, replyTo, type = 'text', gifUrl, imageUrl }) => {
     try {
       const room = ChatStore.get(roomCode);
       if (!room) return;
@@ -156,7 +156,8 @@ function registerChatHandlers(io, socket) {
         senderAvatar: member.avatar,
         text: type === 'text' ? (text || '').slice(0, 1000) : '',
         gifUrl: type === 'gif' ? gifUrl : null,
-        type, // 'text' | 'gif' | 'sticker'
+        imageUrl: (type === 'image' || type === 'gif') ? (imageUrl || gifUrl) : null,
+        type, // 'text' | 'gif' | 'sticker' | 'image'
         replyTo: replyTo || null, // { id, senderName, text }
         reactions: {}, // { emoji: [displayName, ...] }
         edited: false,

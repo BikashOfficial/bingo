@@ -194,6 +194,7 @@ export default function MessageBubble({ message, isMe, onReply, onEdit, onUnsend
                 <span className="reply-sender">{message.replyTo.senderName}</span>
                 <span className="reply-text">
                   {message.replyTo.type === 'gif' ? '🖼 GIF' :
+                   message.replyTo.type === 'image' ? '🖼 Sticker' :
                    message.replyTo.type === 'sticker' ? `${message.replyTo.text}` :
                    message.replyTo.text?.slice(0, 60)}
                 </span>
@@ -226,8 +227,8 @@ export default function MessageBubble({ message, isMe, onReply, onEdit, onUnsend
                   <button onClick={(e) => { e.stopPropagation(); setIsEditing(false); }} className="edit-cancel">Cancel</button>
                 </div>
               </div>
-            ) : message.type === 'gif' ? (
-              <img src={message.gifUrl} alt="GIF" className="msg-gif" />
+            ) : (message.type === 'gif' || message.type === 'image') ? (
+              <img src={message.gifUrl || message.imageUrl} alt="Sticker / GIF" className="msg-gif" />
             ) : message.type === 'sticker' ? (
               <span className="msg-sticker">{message.text}</span>
             ) : (

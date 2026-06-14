@@ -96,6 +96,10 @@ export function useChatActions() {
     socket?.emit('chat_send_message', { roomCode, gifUrl, type: 'gif', replyTo });
   }, [socket]);
 
+  const sendImage = useCallback((roomCode, imageUrl, replyTo = null) => {
+    socket?.emit('chat_send_message', { roomCode, imageUrl, type: 'image', replyTo });
+  }, [socket]);
+
   const editMessage = useCallback((roomCode, messageId, newText) => {
     socket?.emit('chat_edit_message', { roomCode, messageId, newText });
   }, [socket]);
@@ -117,7 +121,7 @@ export function useChatActions() {
   }, [socket]);
 
   return {
-    createRoom, joinRoom, sendMessage, sendGif,
+    createRoom, joinRoom, sendMessage, sendGif, sendImage,
     editMessage, unsendMessage, reactToMessage,
     sendTyping, leaveRoom,
   };

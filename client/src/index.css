@@ -1738,3 +1738,52 @@ body {
   animation: emoji-bounce 0.6s ease-in-out;
 }
 
+@media (max-width: 640px) {
+  /* Tighter input bar on mobile screens */
+  .chat-input-bar {
+    padding: 0.5rem 0.625rem !important;
+    gap: 0.5rem !important;
+  }
+  .chat-input-wrap {
+    padding: 0.375rem 0.625rem !important;
+    border-radius: 16px !important;
+  }
+  .chat-textarea {
+    font-size: 0.875rem !important;
+  }
+  .chat-tool-btn {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 1.125rem !important;
+  }
+  .chat-send-btn {
+    width: 34px !important;
+    height: 34px !important;
+  }
+  .chat-send-btn svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  
+  /* Compact layout for messages container to maximize view area */
+  .chat-messages {
+    padding: 1rem 0.625rem !important;
+    gap: 0.75rem !important;
+  }
+  
+  /* Tighter reply banner */
+  .reply-bar-wrap {
+    padding: 0.5rem 0.75rem !important;
+  }
+  .reply-bar-accent {
+    height: 28px !important;
+  }
+  
+  /* Adjust picker panel bottom position since input bar is shorter */
+  .picker-panel {
+    bottom: 66px !important;
+    height: 280px !important;
+  }
+}
+
+

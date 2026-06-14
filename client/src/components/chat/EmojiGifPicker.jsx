@@ -40,11 +40,19 @@ const STICKERS = [
   '🚀','🌙','⭐','🌟','💫','🎭','🎪','🎨','🎸','🎵',
 ];
 
-const TABS = [
-  { id: 'emoji', label: '😀', title: 'Emoji' },
-  { id: 'gif', label: 'GIF', title: 'GIFs' },
-  { id: 'sticker', label: '🎭', title: 'Stickers' },
-];
+const StickerIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+    <path d="M5 3h14a2 2 0 0 1 2 2v10l-6 6H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+    <path d="M15 21v-4a2 2 0 0 1 2-2h4" />
+    <circle cx="8.5" cy="10.5" r="1.5" fill="currentColor" />
+    <circle cx="15.5" cy="10.5" r="1.5" fill="currentColor" />
+    <path d="M8 14a4 4 0 0 0 8 0" stroke="currentColor" strokeWidth="2.5" />
+  </svg>
+);
+
+const GifIcon = () => (
+  <span style={{ fontWeight: '800', fontSize: '0.875rem', letterSpacing: '0.05em', verticalAlign: 'middle' }}>GIF</span>
+);
 
 export default function EmojiGifPicker({ onSelectEmoji, onSelectGif, onSelectSticker, onClose }) {
   const [tab, setTab] = useState('emoji');
@@ -71,15 +79,27 @@ export default function EmojiGifPicker({ onSelectEmoji, onSelectGif, onSelectSti
       <div className="picker-panel">
         {/* Tab bar */}
         <div className="picker-tabs">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`picker-tab ${tab === t.id ? 'picker-tab-active' : ''}`}
-            >
-              {t.label}
-            </button>
-          ))}
+          <button
+            onClick={() => setTab('emoji')}
+            className={`picker-tab ${tab === 'emoji' ? 'picker-tab-active' : ''}`}
+            title="Emoji"
+          >
+            😀
+          </button>
+          <button
+            onClick={() => setTab('gif')}
+            className={`picker-tab ${tab === 'gif' ? 'picker-tab-active' : ''}`}
+            title="GIFs"
+          >
+            <GifIcon />
+          </button>
+          <button
+            onClick={() => setTab('sticker')}
+            className={`picker-tab ${tab === 'sticker' ? 'picker-tab-active' : ''}`}
+            title="Stickers"
+          >
+            <StickerIcon />
+          </button>
         </div>
 
         {/* Emoji tab */}

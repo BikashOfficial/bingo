@@ -12,7 +12,7 @@ export default function ChatRoomPage() {
   const { roomCode } = useParams();
   const navigate = useNavigate();
   const { state } = useChat();
-  const { sendMessage, sendGif, editMessage, unsendMessage, reactToMessage, sendTyping, leaveRoom } = useChatActions();
+  const { sendMessage, sendGif, sendImage, editMessage, unsendMessage, reactToMessage, sendTyping, leaveRoom } = useChatActions();
 
   const [text, setText] = useState('');
   const [replyTo, setReplyTo] = useState(null);
@@ -24,6 +24,7 @@ export default function ChatRoomPage() {
   const messagesEndRef = useRef(null);
   const typingTimer = useRef(null);
   const isTypingRef = useRef(false);
+  const inputRef = useRef(null);
 
   // Redirect if not in a room (passing roomCode in state to auto-join)
   useEffect(() => {
@@ -61,12 +62,47 @@ export default function ChatRoomPage() {
     clearTimeout(typingTimer.current);
     isTypingRef.current = false;
     sendTyping(roomCode, false);
+    
+    // Maintain keyboard focus on mobile/touch screens
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 10);
   }, [text, roomCode, replyTo, sendMessage, sendTyping]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const handlePaste = (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (!file) continue;
+
+        e.preventDefault();
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const base64Data = event.target.result;
+          const isGif = file.type === 'image/gif';
+
+          if (isGif) {
+            sendGif(roomCode, base64Data, replyTo ? { id: replyTo.id, senderName: replyTo.senderName, senderAvatar: replyTo.senderAvatar, text: '🖼 GIF', type: 'gif' } : null);
+          } else {
+            sendImage(roomCode, base64Data, replyTo ? { id: replyTo.id, senderName: replyTo.senderName, senderAvatar: replyTo.senderAvatar, text: '🖼 Sticker', type: 'image' } : null);
+          }
+          setReplyTo(null);
+        };
+        reader.readAsDataURL(file);
+        break;
+      }
     }
   };
 
@@ -99,7 +135,11 @@ export default function ChatRoomPage() {
     });
   };
 
-  // ── Leave room ──────────────────────────────────────────────────────────────
+  // ── Navigation / Leave handlers ──────────────────────────────────────────────
+  const handleBack = () => {
+    navigate('/', { replace: true });
+  };
+
   const handleLeave = () => {
     leaveRoom(roomCode);
     navigate('/', { replace: true });
@@ -114,7 +154,7 @@ export default function ChatRoomPage() {
     <div className="chat-root">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="chat-header">
-        <button onClick={handleLeave} className="chat-back-btn">
+        <button onClick={handleBack} className="chat-back-btn" title="Back to menu">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
@@ -153,6 +193,13 @@ export default function ChatRoomPage() {
           <button onClick={() => setShowUserList(true)} className="chat-icon-btn" title="Members">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+
+          {/* Leave Room button */}
+          <button onClick={handleLeave} className="chat-icon-btn text-rose-400 hover:text-rose-300 hover:bg-rose-500/10" title="Leave Room">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
         </div>
@@ -236,12 +283,14 @@ export default function ChatRoomPage() {
 
         <div className="chat-input-wrap">
           <textarea
+            ref={inputRef}
             id="chat-text-input"
             className="chat-textarea"
             placeholder="Message…"
             value={text}
             onChange={handleTextChange}
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             rows={1}
             maxLength={1000}
           />
@@ -250,6 +299,7 @@ export default function ChatRoomPage() {
         <button
           id="chat-send-btn"
           onClick={handleSend}
+          onMouseDown={(e) => e.preventDefault()} // prevent focus loss on mouse clicks
           disabled={!text.trim()}
           className="chat-send-btn"
         >
