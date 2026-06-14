@@ -82,8 +82,9 @@ export default function ChatRoomPage() {
   }, [state.messages]);
 
   // ── Typing indicator logic ──────────────────────────────────────────────────
-  const handleTextChange = (e) => {
-    setText(e.target.value);
+  const handleContentEditableInput = (e) => {
+    const value = e.currentTarget.innerText;
+    setText(value);
     if (!isTypingRef.current) {
       isTypingRef.current = true;
       sendTyping(roomCode, true);
@@ -97,10 +98,16 @@ export default function ChatRoomPage() {
 
   // ── Send message ────────────────────────────────────────────────────────────
   const handleSend = useCallback(() => {
-    const trimmed = text.trim();
+    const currentText = inputRef.current ? inputRef.current.innerText : text;
+    const trimmed = currentText.trim();
     if (!trimmed) return;
     sendMessage(roomCode, trimmed, replyTo ? { id: replyTo.id, senderName: replyTo.senderName, senderAvatar: replyTo.senderAvatar, text: replyTo.text, type: replyTo.type } : null);
+    
+    if (inputRef.current) {
+      inputRef.current.innerText = '';
+    }
     setText('');
+    
     setReplyTo(null);
     clearTimeout(typingTimer.current);
     isTypingRef.current = false;
@@ -116,6 +123,15 @@ export default function ChatRoomPage() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const handleSelectEmoji = (emoji) => {
+    if (inputRef.current) {
+      inputRef.current.innerText += emoji;
+      setText(inputRef.current.innerText);
+    } else {
+      setText((t) => t + emoji);
     }
   };
 
@@ -292,7 +308,7 @@ export default function ChatRoomPage() {
       {/* ── Emoji/GIF/Sticker Picker ───────────────────────────────────────── */}
       {showPicker && (
         <EmojiGifPicker
-          onSelectEmoji={(e) => setText((t) => t + e)}
+          onSelectEmoji={handleSelectEmoji}
           onSelectGif={handleGif}
           onSelectSticker={handleSticker}
           onClose={() => setShowPicker(false)}
@@ -310,18 +326,27 @@ export default function ChatRoomPage() {
         </button>
 
         <div className="chat-input-wrap">
-          <textarea
+          <div
             ref={inputRef}
             id="chat-text-input"
-            className="chat-textarea"
+            className={`chat-textarea ${!text ? 'chat-textarea-empty' : ''}`}
+            contentEditable={true}
+            suppressContentEditableWarning={true}
+            role="textbox"
+            aria-multiline="true"
             placeholder="Message…"
-            value={text}
-            onChange={handleTextChange}
+            onInput={handleContentEditableInput}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             onFocus={handleFocus}
-            rows={1}
-            maxLength={1000}
+            style={{
+              outline: 'none',
+              userSelect: 'text',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              overflowY: 'auto',
+              maxHeight: '120px'
+            }}
           />
         </div>
 

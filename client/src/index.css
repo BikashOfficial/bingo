@@ -969,6 +969,7 @@ body {
   display: flex;
   align-items: center;
   min-height: 52px;
+  position: relative;
 }
 .chat-textarea {
   width: 100%;
@@ -982,6 +983,14 @@ body {
   max-height: 120px;
   padding: 0;
   line-height: 1.4;
+}
+.chat-textarea-empty::before {
+  content: attr(placeholder);
+  color: #475569;
+  cursor: text;
+  pointer-events: none;
+  position: absolute;
+  left: 1.125rem;
 }
 .chat-textarea::placeholder {
   color: #475569;
