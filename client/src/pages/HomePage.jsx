@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
 import { useGame } from '../context/GameContext';
 import { toast } from 'react-hot-toast';
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const { socket, connected } = useSocket();
   const { state, dispatch } = useGame();
   const [playerName, setPlayerName] = useState(state.playerName || '');
@@ -80,6 +82,14 @@ export default function HomePage() {
       </div>
 
       <div className="w-full max-w-md animate-slide-up relative z-10">
+        {/* Back button */}
+        <button className="back-btn" onClick={() => navigate('/')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Back
+        </button>
+
         {/* Logo */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-violet-600 to-purple-800 shadow-2xl shadow-violet-900/60 mb-4 animate-glow">

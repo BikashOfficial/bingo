@@ -5,6 +5,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const { registerGameHandlers } = require('./sockets/gameSocket');
+const { registerChatHandlers } = require('./sockets/chatSocket');
 
 const app = express();
 const server = http.createServer(app);
@@ -40,6 +41,7 @@ app.get('/api/rooms/:roomCode/exists', (req, res) => {
 io.on('connection', (socket) => {
   console.log(`[Socket] Connected: ${socket.id}`);
   registerGameHandlers(io, socket);
+  registerChatHandlers(io, socket);
 });
 
 // ─── MongoDB ─────────────────────────────────────────────────────────────────

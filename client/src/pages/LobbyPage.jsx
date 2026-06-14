@@ -14,7 +14,7 @@ export default function LobbyPage() {
 
   useEffect(() => {
     if (!roomCode) {
-      navigate('/');
+      navigate('/bingo');
     }
   }, [roomCode, navigate]);
 
@@ -47,7 +47,7 @@ export default function LobbyPage() {
       socket.emit('leave_room', { roomCode });
     }
     dispatch({ type: 'LEAVE_ROOM' });
-    navigate('/');
+    navigate('/bingo');
   };
 
   return (
@@ -142,7 +142,7 @@ export default function LobbyPage() {
           onClick={handleLeave}
           className="btn-danger w-full"
         >
-          ← Leave Room
+          ← Back to Menu
         </button>
       </div>
     </div>

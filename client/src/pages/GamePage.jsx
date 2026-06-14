@@ -24,7 +24,7 @@ export default function GamePage() {
 
   useEffect(() => {
     if (!roomCode || gameState === 'home') {
-      navigate('/');
+      navigate('/bingo');
     }
   }, [roomCode, gameState, navigate]);
 
@@ -69,7 +69,7 @@ export default function GamePage() {
       socket.emit('leave_room', { roomCode });
     }
     dispatch({ type: 'LEAVE_ROOM' });
-    navigate('/');
+    navigate('/bingo');
   };
 
   const handleChatToggle = () => {

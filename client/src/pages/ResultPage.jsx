@@ -14,7 +14,7 @@ export default function ResultPage() {
 
   useEffect(() => {
     if (!winner && gameState !== 'playing') {
-      navigate('/');
+      navigate('/bingo');
     }
   }, [winner, gameState, navigate]);
 
@@ -33,7 +33,7 @@ export default function ResultPage() {
       socket.emit('leave_room', { roomCode });
     }
     dispatch({ type: 'LEAVE_ROOM' });
-    navigate('/');
+    navigate('/bingo');
   };
 
   return (

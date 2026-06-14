@@ -48,22 +48,22 @@ export function useSocketHandlers() {
     // ── Room Created ──────────────────────────────────────────────────────────
     socket.on("room_created", (data) => {
       dispatch({ type: "ROOM_CREATED", payload: data });
-      navigate("/lobby");
+      navigate("/bingo/lobby");
     });
 
     // ── Room Joined (2nd player joining) ─────────────────────────────────────
     socket.on("room_joined", (data) => {
       dispatch({ type: "ROOM_JOINED", payload: data });
-      navigate("/game");
+      navigate("/bingo/game");
     });
 
     // ── Room Rejoined (reconnect) ─────────────────────────────────────────────
     socket.on("room_rejoined", (data) => {
       dispatch({ type: "ROOM_REJOINED", payload: data });
       if (data.gameState === "finished") {
-        navigate("/result");
+        navigate("/bingo/result");
       } else {
-        navigate("/game");
+        navigate("/bingo/game");
       }
       toast.success("Reconnected to game!");
     });
@@ -76,7 +76,7 @@ export function useSocketHandlers() {
     // ── Game Started (both players in) ────────────────────────────────────────
     socket.on("game_started", (data) => {
       dispatch({ type: "GAME_STARTED", payload: data });
-      navigate("/game");
+      navigate("/bingo/game");
       toast.success("Game started! Good luck! 🎲", { icon: "🎯" });
     });
 
@@ -112,7 +112,7 @@ export function useSocketHandlers() {
     // ── BINGO won ─────────────────────────────────────────────────────────────
     socket.on("bingo_won", (data) => {
       dispatch({ type: "BINGO_WON", payload: data });
-      navigate("/result");
+      navigate("/bingo/result");
     });
 
     // ── Chat message ──────────────────────────────────────────────────────────
@@ -148,7 +148,7 @@ export function useSocketHandlers() {
     // ── Game reset for rematch ────────────────────────────────────────────────
     socket.on("game_reset", (data) => {
       dispatch({ type: "GAME_RESET", payload: data });
-      navigate("/game");
+      navigate("/bingo/game");
       toast.success("New game started!", { icon: "🔄" });
     });
 
@@ -161,7 +161,7 @@ export function useSocketHandlers() {
     socket.on("room_closed", ({ message }) => {
       dispatch({ type: "LEAVE_ROOM" });
       toast.error(message, { duration: 5000 });
-      navigate("/");
+      navigate("/bingo");
     });
 
     return () => {
