@@ -217,9 +217,9 @@ export default function ChatRoomPage() {
         </button>
 
         <div className="chat-header-info">
-          <div className="chat-room-title">
-            <span>💬</span>
+          <div className="chat-room-title" style={{ display: 'flex', alignItems: 'center' }}>
             <span>Chat Room</span>
+            
           </div>
           <div className="chat-room-meta">
             <span className="chat-online-dot" />

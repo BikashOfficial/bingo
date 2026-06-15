@@ -1088,13 +1088,13 @@ body {
   min-width: 60px;
 }
 .msg-bubble-me {
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, #321e58 0%, #230f43 100%); 
+  /* ///////// */
   color: #fff;
   border-bottom-right-radius: 4px;
 }
 .msg-bubble-other {
-  background: rgba(30, 41, 59, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(26, 33, 46, 0.8);
   color: #f1f5f9;
   border-bottom-left-radius: 4px;
   backdrop-filter: blur(8px);
@@ -1801,5 +1801,125 @@ body {
     height: 280px !important;
   }
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   DOTS & BOXES GAME
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* Board container */
+.db-board-container {
+  display: inline-block;
+  position: relative;
+  overflow: visible;
+}
+
+.db-board-svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Dots */
+.db-dot {
+  filter: drop-shadow(0 0 4px rgba(226, 232, 240, 0.3));
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.db-dot:hover {
+  filter: drop-shadow(0 0 8px rgba(226, 232, 240, 0.5));
+}
+
+/* Lines */
+.db-line {
+  transition: stroke 0.2s ease, stroke-width 0.2s ease, opacity 0.2s ease;
+}
+
+.db-line-drawn {
+  filter: drop-shadow(0 0 3px currentColor);
+  animation: db-line-pop 0.3s ease-out;
+}
+
+.db-line-hover {
+  cursor: pointer;
+}
+
+.db-line-hover:hover {
+  stroke: rgba(251, 191, 36, 0.6) !important;
+  stroke-width: 5 !important;
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.4));
+}
+
+/* Clickable hit area */
+.db-line-hitbox {
+  cursor: default;
+  opacity: 0;
+}
+
+.db-line-clickable {
+  cursor: pointer;
+}
+
+.db-line-clickable:hover + .db-line {
+  stroke: rgba(251, 191, 36, 0.6) !important;
+  stroke-width: 5 !important;
+}
+
+/* Claimed boxes */
+.db-box-claimed {
+  animation: db-box-fill 0.4s ease-out;
+}
+
+.db-box-initial {
+  font-family: 'Inter', sans-serif;
+  pointer-events: none;
+  animation: db-initial-pop 0.3s ease-out;
+}
+
+/* Animations */
+@keyframes db-line-pop {
+  0% {
+    stroke-width: 2;
+    opacity: 0.5;
+  }
+  50% {
+    stroke-width: 8;
+  }
+  100% {
+    stroke-width: 6;
+    opacity: 1;
+  }
+}
+
+@keyframes db-box-fill {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes db-initial-pop {
+  0% {
+    opacity: 0;
+    font-size: 0;
+  }
+  50% {
+    font-size: 18px;
+  }
+  100% {
+    opacity: 0.7;
+    font-size: 14px;
+  }
+}
+
 
 

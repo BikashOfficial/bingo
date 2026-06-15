@@ -4,6 +4,7 @@ import { useSocket } from '../context/SocketContext';
 import { useChat } from '../context/ChatContext';
 import { useChatActions } from '../sockets/chatHandlers';
 import { toast } from 'react-hot-toast';
+import { getOrCreateKeyPair } from '../utils/crypto';
 
 export default function ChatEntryPage() {
   const navigate = useNavigate();
@@ -23,21 +24,35 @@ export default function ChatEntryPage() {
     }
   }, [state.roomCode, navigate]);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!displayName.trim()) { toast.error('Enter your display name!'); return; }
     if (!connected) { toast.error('Connecting… please wait.'); return; }
     setLoading(true);
-    createRoom(displayName.trim());
-    setTimeout(() => setLoading(false), 3000);
+    try {
+      const keys = await getOrCreateKeyPair();
+      createRoom(displayName.trim(), keys.publicJwk);
+    } catch (err) {
+      console.error('[E2EE] Key gen failed:', err);
+      toast.error('Failed to initialize encryption keys.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     if (!displayName.trim()) { toast.error('Enter your display name!'); return; }
     if (roomCode.trim().length < 6) { toast.error('Enter a valid 6‑character room code!'); return; }
     if (!connected) { toast.error('Connecting… please wait.'); return; }
     setLoading(true);
-    joinRoom(roomCode.trim().toUpperCase(), displayName.trim());
-    setTimeout(() => setLoading(false), 4000);
+    try {
+      const keys = await getOrCreateKeyPair();
+      joinRoom(roomCode.trim().toUpperCase(), displayName.trim(), keys.publicJwk);
+    } catch (err) {
+      console.error('[E2EE] Key gen failed:', err);
+      toast.error('Failed to initialize encryption keys.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

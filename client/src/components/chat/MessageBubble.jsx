@@ -46,6 +46,7 @@ export default function MessageBubble({ message, isMe, onReply, onEdit, onUnsend
 
   // ── Swipe to reply (touch) ─────────────────────────────────────────────────
   const onTouchStart = (e) => {
+    if (message.decryptionFailed) return;
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
     swipeTriggered.current = false;
@@ -136,7 +137,7 @@ export default function MessageBubble({ message, isMe, onReply, onEdit, onUnsend
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       onTouchCancel={onTouchCancel}
-      onContextMenu={!message.unsent ? onContextMenu : undefined}
+      onContextMenu={!message.unsent && !message.decryptionFailed ? onContextMenu : undefined}
     >
       {/* Swipe reply arrow */}
       {!isMe && swipeDelta > 10 && (
@@ -204,12 +205,24 @@ export default function MessageBubble({ message, isMe, onReply, onEdit, onUnsend
 
           {/* Bubble */}
           <div
-            className={`msg-bubble ${isMe ? 'msg-bubble-me' : 'msg-bubble-other'} ${message.unsent ? 'msg-unsent' : ''} ${isEmojiMsg ? 'msg-bubble-emoji-only' : ''}`}
-            onClick={() => !message.unsent && !isEditing && setShowReactionPicker(false)}
-            onDoubleClick={() => !message.unsent && !isEditing && setShowContextMenu(true)}
+            className={`msg-bubble ${isMe ? 'msg-bubble-me' : 'msg-bubble-other'} ${message.unsent ? 'msg-unsent' : ''} ${isEmojiMsg && !message.decryptionFailed ? 'msg-bubble-emoji-only' : ''}`}
+            onClick={() => !message.unsent && !message.decryptionFailed && !isEditing && setShowReactionPicker(false)}
+            onDoubleClick={() => !message.unsent && !message.decryptionFailed && !isEditing && setShowContextMenu(true)}
           >
             {message.unsent ? (
               <span className="unsent-text">🚫 Message unsent</span>
+            ) : message.decryptionFailed ? (
+              <span className="decryption-failed-text" style={{
+                opacity: 0.65,
+                fontStyle: 'italic',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.85rem',
+                userSelect: 'none'
+              }}>
+                🔒 Encrypted message
+              </span>
             ) : isEditing ? (
               <div className="edit-input-wrap" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
                 <input

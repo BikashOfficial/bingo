@@ -1,46 +1,46 @@
-import { createContext, useContext, useEffect, useRef, useState, useMemo } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
 const SocketContext = createContext(null);
 
+// Create the socket ONCE outside React so it's never recreated on re-renders
+const socket = io(SOCKET_URL, {
+  transports: ['websocket', 'polling'],
+  reconnection: true,
+  reconnectionAttempts: 10,
+  reconnectionDelay: 1000,
+  autoConnect: true,
+});
+
 export function SocketProvider({ children }) {
-  const socketRef = useRef(null);
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(socket.connected);
 
   useEffect(() => {
-    const socket = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-    });
-
-    socket.on('connect', () => {
+    const handleConnect = () => {
       setConnected(true);
       console.log('[Socket] Connected:', socket.id);
-    });
-
-    socket.on('disconnect', () => {
+    };
+    const handleDisconnect = () => {
       setConnected(false);
       console.log('[Socket] Disconnected');
-    });
+    };
 
-    socketRef.current = socket;
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+
+    // In case already connected when effect runs
+    if (socket.connected) setConnected(true);
 
     return () => {
-      socket.disconnect();
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
     };
   }, []);
 
-  const contextValue = useMemo(() => ({
-    socket: socketRef.current,
-    connected
-  }), [connected]);
-
   return (
-    <SocketContext.Provider value={contextValue}>
+    <SocketContext.Provider value={{ socket, connected }}>
       {children}
     </SocketContext.Provider>
   );
