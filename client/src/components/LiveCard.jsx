@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 /* ─────────────────────────────────────────────
@@ -81,9 +81,18 @@ export default function LiveCard({ game, index }) {
   const [hovered, setHovered] = useState(false);
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
   const [cursor, setCursor] = useState({ x: 0, y: 0 });
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mm = window.matchMedia("(max-width: 768px)");
+    setIsMobile(mm.matches);
+    const handler = (e) => setIsMobile(e.matches);
+    mm.addEventListener("change", handler);
+    return () => mm.removeEventListener("change", handler);
+  }, []);
 
   const handleMouseMove = (e) => {
-    if (!cardRef.current) return;
+    if (!cardRef.current || isMobile) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -95,8 +104,10 @@ export default function LiveCard({ game, index }) {
     });
   };
 
-  const cardTransform = hovered
+  const cardTransform = hovered && !isMobile
     ? `perspective(900px) rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) translateY(-10px) scale(1.03)`
+    : hovered && isMobile
+    ? `perspective(900px) rotateX(0deg) rotateY(0deg) translateY(-10px) scale(1.03)`
     : `perspective(900px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)`;
 
   const cardTransition = hovered
@@ -107,9 +118,15 @@ export default function LiveCard({ game, index }) {
     <div
       ref={cardRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setHovered(true)}
+      onMouseEnter={() => !isMobile && setHovered(true)}
       onMouseLeave={() => { setHovered(false); setRotate({ x: 0, y: 0 }); }}
-      onClick={() => navigate(game.path)}
+      onClick={() => {
+        if (isMobile) {
+          setHovered(prev => !prev);
+        } else {
+          navigate(game.path);
+        }
+      }}
       style={{
         /* Layout */
         display: "flex",
