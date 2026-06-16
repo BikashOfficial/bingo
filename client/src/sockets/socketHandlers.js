@@ -10,41 +10,29 @@ import { useGame } from "../context/GameContext";
  * Handles: room flow, board updates, turn tracking, chat, disconnect.
  */
 export function useSocketHandlers() {
-  const { socket } = useSocket();
+  const { socket, connected } = useSocket();
   const { state, dispatch } = useGame();
-  const { roomCode, playerName, gameState, mySocketId } = state;
   const navigate = useNavigate();
   // Track which socket ID we've already registered on to avoid duplicate listeners
   const registeredSocketIdRef = useRef(null);
 
+  // ── Auto-Rejoin on socket reconnect or ID mismatch ──
+  useEffect(() => {
+    if (!socket || !connected) return;
+    const { roomCode, playerName, gameState, mySocketId } = state;
+    if (!roomCode || !playerName || gameState === "home") return;
+
+    if (mySocketId && mySocketId !== socket.id) {
+      console.log(
+        `[SocketHandlers] Auto-rejoining room ${roomCode} as ${playerName} (socket ID mismatch: local=${socket.id}, state=${mySocketId})`,
+      );
+      socket.emit("join_room", { roomCode, playerName });
+    }
+  }, [socket, connected, state.roomCode, state.playerName, state.mySocketId]);
+
   useEffect(() => {
     if (!socket || registeredSocketIdRef.current === socket.id) return;
     registeredSocketIdRef.current = socket.id;
-
-    // ── Auto-Rejoin check ──
-    const handleConnect = () => {
-      console.log("[SocketHandlers] Connected/Reconnected:", socket.id);
-      if (roomCode && playerName && gameState !== "home") {
-        if (mySocketId && mySocketId !== socket.id) {
-          console.log(
-            `[SocketHandlers] Socket ID mismatch (local: ${socket.id}, state: ${mySocketId}). Auto-rejoining...`,
-          );
-          socket.emit("join_room", { roomCode, playerName });
-        }
-      }
-    };
-
-    socket.on("connect", handleConnect);
-
-    // Check immediately if we are already connected but need to rejoin
-    if (socket.connected && roomCode && playerName && gameState !== "home") {
-      if (mySocketId && mySocketId !== socket.id) {
-        console.log(
-          `[SocketHandlers] Auto-rejoining room (on load/state change): ${roomCode} as ${playerName}`,
-        );
-        socket.emit("join_room", { roomCode, playerName });
-      }
-    }
 
     // ── Room Created ──────────────────────────────────────────────────────────
     socket.on("room_created", (data) => {
@@ -167,7 +155,6 @@ export function useSocketHandlers() {
 
     return () => {
       registeredSocketIdRef.current = null;
-      socket.off("connect", handleConnect);
       const events = [
         "room_created",
         "room_joined",
@@ -189,5 +176,5 @@ export function useSocketHandlers() {
       ];
       events.forEach((e) => socket.off(e));
     };
-  }, [socket, dispatch, navigate, roomCode, playerName, gameState, mySocketId]);
+  }, [socket, dispatch, navigate]);
 }

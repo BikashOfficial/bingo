@@ -26,7 +26,7 @@ const DB_EVENTS = [
  * Maps server events to DotsBoxesContext dispatch actions.
  */
 export function useDotsBoxesListeners() {
-  const { socket } = useSocket();
+  const { socket, connected } = useSocket();
   const { state, dispatch } = useDotsBoxes();
   const navigate = useNavigate();
   const stateRef = useRef(state);
@@ -34,6 +34,18 @@ export function useDotsBoxesListeners() {
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
+
+  // ── Auto-Rejoin on socket reconnect or ID mismatch ──
+  useEffect(() => {
+    if (!socket || !connected) return;
+    const { roomCode, playerName, gameState, mySocketId } = state;
+    if (!roomCode || !playerName || gameState === 'home') return;
+
+    if (mySocketId && mySocketId !== socket.id) {
+      console.log(`[DB] Auto-rejoining room ${roomCode} as ${playerName} (socket ID mismatch: local=${socket.id}, state=${mySocketId})`);
+      socket.emit("db_join_room", { roomCode, playerName });
+    }
+  }, [socket, connected, state.roomCode, state.playerName, state.mySocketId]);
 
   useEffect(() => {
     if (!socket) return;
@@ -143,22 +155,8 @@ export function useDotsBoxesListeners() {
       navigate("/dotsboxes");
     });
 
-    // ── Auto-rejoin on socket reconnect ──────────────────────────────────────
-    // When the socket reconnects it gets a brand-new ID. We must re-emit
-    // db_join_room so the server updates the player's socketId (and currentTurn)
-    // before the 30 s grace timer fires and closes the room.
-    const handleReconnect = () => {
-      const { roomCode, playerName, gameState } = stateRef.current;
-      if (!roomCode || !playerName || gameState === 'home') return;
-      console.log(`[DB] Reconnected — rejoining room ${roomCode} as ${playerName}`);
-      socket.emit("db_join_room", { roomCode, playerName });
-    };
-
-    socket.on("connect", handleReconnect);
-
     return () => {
       DB_EVENTS.forEach((e) => socket.off(e));
-      socket.off("connect", handleReconnect);
     };
   }, [socket, dispatch, navigate]);
 }

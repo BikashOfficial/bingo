@@ -14,13 +14,44 @@ import {
 const messageKeys = new Map();
 
 export function useChatListeners() {
-  const { socket } = useSocket();
+  const { socket, connected } = useSocket();
   const { state, dispatch, addSystemMessage } = useChat();
   const stateRef = useRef(state);
 
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
+
+  // ── Auto-Rejoin on socket reconnect or ID mismatch ──
+  useEffect(() => {
+    if (!socket || !connected) return;
+    const { roomCode, me } = state;
+    if (!roomCode || !me?.displayName) return;
+
+    if (me.socketId !== socket.id) {
+      console.log(`[Chat] Auto-rejoining room ${roomCode} as ${me.displayName} (socket ID mismatch: local=${socket.id}, state=${me.socketId})`);
+      
+      const doRejoin = async () => {
+        try {
+          const keys = await getOrCreateKeyPair();
+          const publicKeyJwk = await window.crypto.subtle.exportKey('jwk', keys.publicKey);
+          socket.emit("chat_join_room", {
+            roomCode,
+            displayName: me.displayName,
+            publicKey: publicKeyJwk,
+          });
+        } catch (err) {
+          socket.emit("chat_join_room", {
+            roomCode,
+            displayName: me.displayName,
+          });
+          console.warn("[Chat] Reconnected without public key:", err);
+        }
+      };
+      
+      doRejoin();
+    }
+  }, [socket, connected, state.roomCode, state.me?.socketId]);
 
   useEffect(() => {
     if (!socket) return;
@@ -195,35 +226,6 @@ export function useChatListeners() {
     socket.on("chat_user_left", onUserLeft);
     socket.on("chat_receive_history_keys", onReceiveHistoryKeys);
 
-    // ── Auto-rejoin on socket reconnect ──────────────────────────────────────
-    // When the transport reconnects the socket gets a brand-new ID.
-    // The server has a 15 s grace period but it matches by socketId, so we
-    // must re-emit join immediately so the server swaps in the new ID before
-    // the grace timer fires and removes the user from the room.
-    const handleReconnect = async () => {
-      const { roomCode, me } = stateRef.current;
-      if (!roomCode || !me?.displayName) return;
-      console.log(`[Chat] Reconnected — rejoining room ${roomCode} as ${me.displayName}`);
-      try {
-        const keys = await getOrCreateKeyPair();
-        const publicKeyJwk = await window.crypto.subtle.exportKey('jwk', keys.publicKey);
-        socket.emit("chat_join_room", {
-          roomCode,
-          displayName: me.displayName,
-          publicKey: publicKeyJwk,
-        });
-      } catch (err) {
-        // Fallback without publicKey — server will still update the socketId
-        socket.emit("chat_join_room", {
-          roomCode,
-          displayName: me.displayName,
-        });
-        console.warn("[Chat] Reconnected without exporting public key:", err);
-      }
-    };
-
-    socket.on("connect", handleReconnect);
-
     return () => {
       socket.off("chat_room_created", onRoomCreated);
       socket.off("chat_room_joined", onRoomJoined);
@@ -236,7 +238,6 @@ export function useChatListeners() {
       socket.off("chat_user_joined", onUserJoined);
       socket.off("chat_user_left", onUserLeft);
       socket.off("chat_receive_history_keys", onReceiveHistoryKeys);
-      socket.off("connect", handleReconnect);
     };
   }, [socket, dispatch, addSystemMessage]);
 }
