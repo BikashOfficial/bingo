@@ -14,11 +14,12 @@ export function useSocketHandlers() {
   const { state, dispatch } = useGame();
   const { roomCode, playerName, gameState, mySocketId } = state;
   const navigate = useNavigate();
-  const registeredRef = useRef(false);
+  // Track which socket ID we've already registered on to avoid duplicate listeners
+  const registeredSocketIdRef = useRef(null);
 
   useEffect(() => {
-    if (!socket || registeredRef.current) return;
-    registeredRef.current = true;
+    if (!socket || registeredSocketIdRef.current === socket.id) return;
+    registeredSocketIdRef.current = socket.id;
 
     // ── Auto-Rejoin check ──
     const handleConnect = () => {
@@ -165,7 +166,7 @@ export function useSocketHandlers() {
     });
 
     return () => {
-      registeredRef.current = false;
+      registeredSocketIdRef.current = null;
       socket.off("connect", handleConnect);
       const events = [
         "room_created",

@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
-import { useDotsBoxes } from '../context/DotsBoxesContext';
+import { useGame } from '../context/GameContext';
 import { toast } from 'react-hot-toast';
 import LobbyEntryTemplate from '../components/LobbyEntryTemplate';
 
-export default function DotsBoxesHomePage() {
+export default function BingoHomePage() {
   const navigate = useNavigate();
   const { socket, connected } = useSocket();
-  const { state, dispatch } = useDotsBoxes();
+  const { state, dispatch } = useGame();
   const [loading, setLoading] = useState(false);
 
   const handleCreateRoom = (playerName) => {
@@ -20,9 +20,9 @@ export default function DotsBoxesHomePage() {
       toast.error('Connecting to server... Please wait.');
       return;
     }
-    dispatch({ type: 'DB_SET_PLAYER_NAME', payload: playerName.trim() });
+    dispatch({ type: 'SET_PLAYER_NAME', payload: playerName.trim() });
     setLoading(true);
-    socket.emit('db_create_room', { playerName: playerName.trim() });
+    socket.emit('create_room', { playerName: playerName.trim() });
     setTimeout(() => setLoading(false), 3000);
   };
 
@@ -39,9 +39,9 @@ export default function DotsBoxesHomePage() {
       toast.error('Connecting to server... Please wait.');
       return;
     }
-    dispatch({ type: 'DB_SET_PLAYER_NAME', payload: playerName.trim() });
+    dispatch({ type: 'SET_PLAYER_NAME', payload: playerName.trim() });
     setLoading(true);
-    socket.emit('db_join_room', {
+    socket.emit('join_room', {
       roomCode: roomCode.toUpperCase().trim(),
       playerName: playerName.trim(),
     });
@@ -49,18 +49,18 @@ export default function DotsBoxesHomePage() {
   };
 
   const features = [
-    { icon: '⚔️', text: '1v1 turn-based battle' },
-    { icon: '🧠', text: 'Strategy & logic' },
-    { icon: '📈', text: 'Real-time scoreboard' },
+    { icon: '🎯', text: 'Live matching' },
+    { icon: '⚡', text: 'Instant play' },
+    { icon: '🔄', text: 'Automatic sync' },
   ];
 
   return (
     <LobbyEntryTemplate
-      title="DOTS & BOXES"
-      subtitle="Claim the most boxes to win 🏆"
-      icon="🔲"
+      title="BINGO"
+      subtitle="Real-time multiplayer fun 🎮"
+      icon="🎱"
       features={features}
-      theme="orange"
+      theme="indigo"
       initialPlayerName={state.playerName || ''}
       connected={connected}
       loading={loading}

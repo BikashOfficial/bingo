@@ -7,7 +7,7 @@ import { DotsBoxesProvider } from './context/DotsBoxesContext';
 import LandingPage from './pages/LandingPage';
 import ChatEntryPage from './pages/ChatEntryPage';
 import ChatRoomPage from './pages/ChatRoomPage';
-import HomePage from './pages/HomePage';
+import BingoHomePage from './pages/BingoHomePage';
 import LobbyPage from './pages/LobbyPage';
 import GamePage from './pages/GamePage';
 import ResultPage from './pages/ResultPage';
@@ -53,7 +53,7 @@ export default function App() {
                 <Route path="/chat/room/:roomCode" element={<ChatRoomPage />} />
 
                 {/* ── Bingo Game ──────────────────────── */}
-                <Route path="/bingo" element={<HomePage />} />
+                <Route path="/bingo" element={<BingoHomePage />} />
                 <Route path="/bingo/lobby" element={<LobbyPage />} />
                 <Route path="/bingo/game" element={<GamePage />} />
                 <Route path="/bingo/result" element={<ResultPage />} />

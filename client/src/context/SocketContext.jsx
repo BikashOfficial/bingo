@@ -9,8 +9,10 @@ const SocketContext = createContext(null);
 const socket = io(SOCKET_URL, {
   transports: ['websocket', 'polling'],
   reconnection: true,
-  reconnectionAttempts: 10,
+  reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+  timeout: 20000,
   autoConnect: true,
 });
 

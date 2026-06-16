@@ -365,30 +365,46 @@ function registerGameHandlers(io, socket) {
       const player = room.players.find((p) => p.socketId === socket.id);
       if (!player) return;
 
+      const disconnectedRoomCode = room.roomCode;
+      const disconnectedSocketId = socket.id;
+      const disconnectedPlayerName = player.playerName;
+
       console.log(
-        `[Disconnect] ${player.playerName} left room ${room.roomCode}`,
+        `[Disconnect] ${disconnectedPlayerName} left room ${disconnectedRoomCode}`,
       );
 
-      io.to(room.roomCode).emit("player_disconnected", {
-        playerName: player.playerName,
-        message: `${player.playerName} disconnected. Waiting for reconnect...`,
+      // Notify only the OTHER players (not the disconnected socket itself)
+      socket.to(disconnectedRoomCode).emit("player_disconnected", {
+        playerName: disconnectedPlayerName,
+        message: `${disconnectedPlayerName} disconnected. Waiting for reconnect...`,
       });
 
       setTimeout(() => {
-        const currentRoom = RoomStore.get(room.roomCode);
-        if (currentRoom) {
-          const stillDisconnected = currentRoom.players.find(
-            (p) =>
-              p.playerName === player.playerName && p.socketId === socket.id,
-          );
-          if (stillDisconnected) {
-            io.to(room.roomCode).emit("room_closed", {
-              message: `${player.playerName} left. Room has been closed.`,
-            });
-            RoomStore.delete(room.roomCode);
-            console.log(`[Room Closed] ${room.roomCode}`);
-          }
+        const currentRoom = RoomStore.get(disconnectedRoomCode);
+        if (!currentRoom) return;
+
+        // Check if the player reconnected: their socketId would have changed
+        const reconnectedPlayer = currentRoom.players.find(
+          (p) => p.playerName === disconnectedPlayerName,
+        );
+
+        // If they reconnected (socketId is different), do nothing
+        if (!reconnectedPlayer || reconnectedPlayer.socketId !== disconnectedSocketId) {
+          console.log(`[Reconnect OK] ${disconnectedPlayerName} reconnected to ${disconnectedRoomCode}`);
+          return;
         }
+
+        // Player never came back — notify other players and close room
+        const remainingPlayers = currentRoom.players.filter(
+          (p) => p.playerName !== disconnectedPlayerName,
+        );
+        for (const p of remainingPlayers) {
+          io.to(p.socketId).emit("room_closed", {
+            message: `${disconnectedPlayerName} left. Room has been closed.`,
+          });
+        }
+        RoomStore.delete(disconnectedRoomCode);
+        console.log(`[Room Closed] ${disconnectedRoomCode} — ${disconnectedPlayerName} never reconnected`);
       }, 30000);
     } catch (err) {
       console.error("[disconnect error]", err);

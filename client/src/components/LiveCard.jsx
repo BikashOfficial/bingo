@@ -239,8 +239,6 @@ export default function LiveCard({ game, index }) {
           display: "inline-block",
           marginBottom: 12,
           zIndex: 2,
-          animation: "floatEmoji 3s ease-in-out infinite",
-          animationDelay: `${index * 0.4}s`,
           filter: "drop-shadow(0 8px 18px rgba(0,0,0,0.45))",
           width: "fit-content",
           transformOrigin: "center bottom",

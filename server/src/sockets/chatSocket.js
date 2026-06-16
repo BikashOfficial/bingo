@@ -308,9 +308,27 @@ function registerChatHandlers(io, socket) {
   // ─── DISCONNECT ──────────────────────────────────────────────────────────────
   socket.on("disconnect", () => {
     const roomCode = socket.data.chatRoom;
-    if (roomCode) {
+    if (!roomCode) return;
+
+    const disconnectedSocketId = socket.id;
+    const disconnectedDisplayName = socket.data.displayName;
+
+    // Grace period: allow 15s for the user to reconnect before removing them
+    setTimeout(() => {
+      const room = ChatStore.get(roomCode);
+      if (!room) return;
+
+      // Check if user reconnected (their socketId changed)
+      const member = room.members.find((m) => m.displayName === disconnectedDisplayName);
+      if (!member || member.socketId !== disconnectedSocketId) {
+        // They reconnected — do nothing
+        console.log(`[Chat] ${disconnectedDisplayName} reconnected to ${roomCode}`);
+        return;
+      }
+
+      // User truly left — remove them
       _handleLeave(io, socket, roomCode);
-    }
+    }, 15000);
   });
 }
 
