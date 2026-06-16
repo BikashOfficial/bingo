@@ -53,7 +53,11 @@ export default function MessageBubble({ message, isMe, onReply, onEdit, onUnsend
 
     // Long press for reaction picker / context menu
     longPressTimer.current = setTimeout(() => {
-      setShowContextMenu(true);
+      if (!isMe && window.innerWidth < 768) {
+        setShowReactionPicker(true);
+      } else {
+        setShowContextMenu(true);
+      }
       navigator.vibrate?.(50);
     }, 500);
   };
@@ -99,7 +103,11 @@ export default function MessageBubble({ message, isMe, onReply, onEdit, onUnsend
   // ── Right-click context menu (desktop) ────────────────────────────────────
   const onContextMenu = (e) => {
     e.preventDefault();
-    setShowContextMenu(true);
+    if (!isMe && window.innerWidth < 768) {
+      setShowReactionPicker(true);
+    } else {
+      setShowContextMenu(true);
+    }
   };
 
   const handleEdit = () => {
@@ -287,7 +295,7 @@ export default function MessageBubble({ message, isMe, onReply, onEdit, onUnsend
           <>
             <div className="ctx-backdrop" onClick={() => setShowContextMenu(false)} />
             <div className={`ctx-menu ${isMe ? 'ctx-menu-me' : 'ctx-menu-other'}`}>
-              <button className="ctx-item" onClick={() => { setShowContextMenu(false); onReply(message); }}>
+              <button className="ctx-item ctx-item-reply" onClick={() => { setShowContextMenu(false); onReply(message); }}>
                 ↩ Reply
               </button>
               <button className="ctx-item" onClick={() => { setShowContextMenu(false); setShowReactionPicker(true); }}>

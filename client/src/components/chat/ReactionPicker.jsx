@@ -1,4 +1,4 @@
-const QUICK_REACTIONS = ['❤️', '😂', '😮', '😢', '😡', '👍', '👎', '🔥', '🎉', '💯'];
+const QUICK_REACTIONS = ['❤️', '🥰', '😂', '😘','💋','😢', '😡', '👍'];
 
 export default function ReactionPicker({ onReact, onClose }) {
   return (
