@@ -203,9 +203,16 @@ function registerDotsBoxesHandlers(io, socket) {
         (p) => p.playerName === playerName
       );
       if (existingIdx !== -1) {
-        if (room.players[existingIdx].socketId !== socket.id) {
-          room.players[existingIdx].socketId = socket.id;
-          socket.join(code);
+        const oldSocketId = room.players[existingIdx].socketId;
+        room.players[existingIdx].socketId = socket.id;
+
+        // If it was this player's turn, update currentTurn to the new socket ID
+        if (room.currentTurn === oldSocketId) {
+          room.currentTurn = socket.id;
+        }
+
+        socket.join(code);
+        if (oldSocketId !== socket.id) {
           io.to(code).emit("db_player_reconnected", { playerName });
         }
         socket.emit("db_room_rejoined", {

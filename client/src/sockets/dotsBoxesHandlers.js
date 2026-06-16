@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useSocket } from "../context/SocketContext";
@@ -27,8 +27,13 @@ const DB_EVENTS = [
  */
 export function useDotsBoxesListeners() {
   const { socket } = useSocket();
-  const { dispatch } = useDotsBoxes();
+  const { state, dispatch } = useDotsBoxes();
   const navigate = useNavigate();
+  const stateRef = useRef(state);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   useEffect(() => {
     if (!socket) return;
@@ -138,8 +143,22 @@ export function useDotsBoxesListeners() {
       navigate("/dotsboxes");
     });
 
+    // ── Auto-rejoin on socket reconnect ──────────────────────────────────────
+    // When the socket reconnects it gets a brand-new ID. We must re-emit
+    // db_join_room so the server updates the player's socketId (and currentTurn)
+    // before the 30 s grace timer fires and closes the room.
+    const handleReconnect = () => {
+      const { roomCode, playerName, gameState } = stateRef.current;
+      if (!roomCode || !playerName || gameState === 'home') return;
+      console.log(`[DB] Reconnected — rejoining room ${roomCode} as ${playerName}`);
+      socket.emit("db_join_room", { roomCode, playerName });
+    };
+
+    socket.on("connect", handleReconnect);
+
     return () => {
       DB_EVENTS.forEach((e) => socket.off(e));
+      socket.off("connect", handleReconnect);
     };
   }, [socket, dispatch, navigate]);
 }

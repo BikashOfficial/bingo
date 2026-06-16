@@ -66,7 +66,9 @@ export function useChatListeners() {
     };
 
     const onRoomJoined = async ({ roomCode, member, members, messages }) => {
-      messageKeys.clear();
+      // Only clear keys when entering a brand new room, not on reconnect
+      const isNewRoom = stateRef.current.roomCode !== roomCode;
+      if (isNewRoom) messageKeys.clear();
       const decryptedMessages = await Promise.all(
         messages.map((m) => decryptMsg(m, member.displayName)),
       );
@@ -193,6 +195,35 @@ export function useChatListeners() {
     socket.on("chat_user_left", onUserLeft);
     socket.on("chat_receive_history_keys", onReceiveHistoryKeys);
 
+    // ── Auto-rejoin on socket reconnect ──────────────────────────────────────
+    // When the transport reconnects the socket gets a brand-new ID.
+    // The server has a 15 s grace period but it matches by socketId, so we
+    // must re-emit join immediately so the server swaps in the new ID before
+    // the grace timer fires and removes the user from the room.
+    const handleReconnect = async () => {
+      const { roomCode, me } = stateRef.current;
+      if (!roomCode || !me?.displayName) return;
+      console.log(`[Chat] Reconnected — rejoining room ${roomCode} as ${me.displayName}`);
+      try {
+        const keys = await getOrCreateKeyPair();
+        const publicKeyJwk = await window.crypto.subtle.exportKey('jwk', keys.publicKey);
+        socket.emit("chat_join_room", {
+          roomCode,
+          displayName: me.displayName,
+          publicKey: publicKeyJwk,
+        });
+      } catch (err) {
+        // Fallback without publicKey — server will still update the socketId
+        socket.emit("chat_join_room", {
+          roomCode,
+          displayName: me.displayName,
+        });
+        console.warn("[Chat] Reconnected without exporting public key:", err);
+      }
+    };
+
+    socket.on("connect", handleReconnect);
+
     return () => {
       socket.off("chat_room_created", onRoomCreated);
       socket.off("chat_room_joined", onRoomJoined);
@@ -205,6 +236,7 @@ export function useChatListeners() {
       socket.off("chat_user_joined", onUserJoined);
       socket.off("chat_user_left", onUserLeft);
       socket.off("chat_receive_history_keys", onReceiveHistoryKeys);
+      socket.off("connect", handleReconnect);
     };
   }, [socket, dispatch, addSystemMessage]);
 }

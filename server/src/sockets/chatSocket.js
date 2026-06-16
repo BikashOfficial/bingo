@@ -254,18 +254,31 @@ function registerChatHandlers(io, socket) {
       if (!message || message.unsent) return;
 
       if (!message.reactions) message.reactions = {};
-      if (!message.reactions[emoji]) message.reactions[emoji] = [];
 
-      const idx = message.reactions[emoji].indexOf(member.displayName);
-      if (idx === -1) {
-        // Add reaction
-        message.reactions[emoji].push(member.displayName);
-      } else {
-        // Toggle off
-        message.reactions[emoji].splice(idx, 1);
-        if (message.reactions[emoji].length === 0) {
-          delete message.reactions[emoji];
+      // Find if they already have any reaction on this message
+      let existingEmoji = null;
+      for (const [key, users] of Object.entries(message.reactions)) {
+        if (users.includes(member.displayName)) {
+          existingEmoji = key;
+          break;
         }
+      }
+
+      if (existingEmoji) {
+        // Remove the user's existing reaction
+        const idx = message.reactions[existingEmoji].indexOf(member.displayName);
+        if (idx !== -1) {
+          message.reactions[existingEmoji].splice(idx, 1);
+          if (message.reactions[existingEmoji].length === 0) {
+            delete message.reactions[existingEmoji];
+          }
+        }
+      }
+
+      // If the clicked emoji is different from their existing one, add it
+      if (existingEmoji !== emoji) {
+        if (!message.reactions[emoji]) message.reactions[emoji] = [];
+        message.reactions[emoji].push(member.displayName);
       }
 
       io.to(roomCode).emit("chat_reaction_update", {
@@ -313,7 +326,7 @@ function registerChatHandlers(io, socket) {
     const disconnectedSocketId = socket.id;
     const disconnectedDisplayName = socket.data.displayName;
 
-    // Grace period: allow 15s for the user to reconnect before removing them
+    // Grace period: allow 30s for the user to reconnect before removing them
     setTimeout(() => {
       const room = ChatStore.get(roomCode);
       if (!room) return;
@@ -328,7 +341,7 @@ function registerChatHandlers(io, socket) {
 
       // User truly left — remove them
       _handleLeave(io, socket, roomCode);
-    }, 15000);
+    }, 30000);
   });
 }
 

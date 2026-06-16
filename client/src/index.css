@@ -1244,6 +1244,14 @@ body {
 }
 .swipe-arrow-left {
   right: -24px;
+}@keyframes msgHighlight {
+  0% { background: rgba(139, 92, 246, 0); }
+  25% { background: rgba(139, 92, 246, 0.2); }
+  100% { background: rgba(139, 92, 246, 0); }
+}
+
+.msg-row-highlight {
+  animation: msgHighlight 1.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 /* Context Menu backdrop & container */

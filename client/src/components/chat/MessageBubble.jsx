@@ -140,6 +140,7 @@ export default function MessageBubble({ message, isMe, onReply, onEdit, onUnsend
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div
+      id={`msg-${message.id}`}
       className={`msg-row ${isMe ? 'msg-row-me' : 'msg-row-other'}`}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
@@ -197,7 +198,21 @@ export default function MessageBubble({ message, isMe, onReply, onEdit, onUnsend
         >
           {/* Reply preview */}
           {message.replyTo && !message.unsent && (
-            <div className={`reply-preview ${isMe ? 'reply-preview-me' : 'reply-preview-other'}`}>
+            <div
+              className={`reply-preview ${isMe ? 'reply-preview-me' : 'reply-preview-other'}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                const target = document.getElementById(`msg-${message.replyTo.id}`);
+                if (target) {
+                  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  target.classList.add('msg-row-highlight');
+                  setTimeout(() => {
+                    target.classList.remove('msg-row-highlight');
+                  }, 1200);
+                }
+              }}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="reply-bar" style={{ background: message.replyTo.senderAvatar?.color || '#8b5cf6' }} />
               <div className="reply-content">
                 <span className="reply-sender">{message.replyTo.senderName}</span>
